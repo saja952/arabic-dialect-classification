@@ -60,8 +60,7 @@ def predict(text, max_len=192):
     label_char = id2label[pred_id]
     dialect_full = DIALECT_NAME.get(label_char, label_char)
 
-    confidence = float(probs[pred_id])
-    return label_char, dialect_full, confidence, probs
+    return label_char, dialect_full, probs
 
 
 st.title("🗣️ Arabic Dialect Classifier / تصنيف اللهجات العربية")
@@ -81,10 +80,10 @@ if st.button("اتوقع اللهجة"):
     if not text.strip():
         st.warning("يرجى إدخال نص أولاً.")
     else:
-        label_char, dialect_full, confidence, probs = predict(text)
+        label_char, dialect_full, probs = predict(text)
+
 
         st.success(f"اللهجة المتوقعة: **{dialect_full}**")
-        st.info(f"Confidence: **{confidence:.3f}**")
 
         st.subheader("احتمالات كل لهجة:")
         for i, p in enumerate(probs):
@@ -92,4 +91,3 @@ if st.button("اتوقع اللهجة"):
             name = DIALECT_NAME.get(char, char)
             st.write(f"{name}: {p:.3f}")
             st.progress(float(p))
-
