@@ -85,9 +85,4 @@ if st.button("اتوقع اللهجة"):
 
         st.success(f"اللهجة المتوقعة: **{dialect_full}**")
 
-        st.subheader("احتمالات كل لهجة:")
-        for i, p in enumerate(probs):
-            char = id2label[i]
-            name = DIALECT_NAME.get(char, char)
-            st.write(f"{name}: {p:.3f}")
-            st.progress(float(p))
+
