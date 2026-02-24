@@ -1,13 +1,15 @@
 import streamlit as st
 import torch
 import numpy as np
-import json
-import os
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-st.set_page_config(page_title="Arabic Dialect Classifier", page_icon="🗣️", layout="centered")
+st.set_page_config(
+    page_title="Arabic Dialect Classifier",
+    page_icon="🗣️",
+    layout="centered"
+)
 
-MODEL_DIR = "best_model"
+MODEL_DIR = "saja-hamasha/arabic-dialect-classifier"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 DIALECT_NAME = {
@@ -19,15 +21,23 @@ DIALECT_NAME = {
 
 @st.cache_resource
 def load_model():
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR, local_files_only=True)
-    model = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR, local_files_only=True).to(device)
+    tokenizer = AutoTokenizer.from_pretrained(
+        MODEL_DIR,
+        subfolder="best_model"
+    )
+
+    model = AutoModelForSequenceClassification.from_pretrained(
+        MODEL_DIR,
+        subfolder="best_model"
+    ).to(device)
+
     model.eval()
 
-    with open(os.path.join(MODEL_DIR, "config.json"), "r", encoding="utf-8") as f:
-        cfg = json.load(f)
+    id2label = model.config.id2label
+    id2label = {int(k): v for k, v in id2label.items()}
 
-    id2label = {int(k): v for k, v in cfg["id2label"].items()}
     return tokenizer, model, id2label
+
 
 tokenizer, model, id2label = load_model()
 
@@ -39,6 +49,7 @@ def predict(text, max_len=192):
         max_length=max_len,
         return_tensors="pt"
     )
+
     inputs = {k: v.to(device) for k, v in inputs.items()}
 
     with torch.no_grad():
@@ -52,26 +63,30 @@ def predict(text, max_len=192):
     confidence = float(probs[pred_id])
     return label_char, dialect_full, confidence, probs
 
-st.title("🗣️ Arabic Dialect Classifier/ تصنيف اللهجات العربية")
+
+st.title("🗣️ Arabic Dialect Classifier / تصنيف اللهجات العربية")
 st.write("Model: MARBERT fine-tuned for dialect classification")
 
 st.markdown("### اللهجات المتوقعة:")
 for k in ["E", "G", "J", "Y"]:
     st.write(f"- **{DIALECT_NAME[k]}**")
 
-text = st.text_area(" اكتب نص باللهجة العربية:", height=120, placeholder="مثال: شو الأخبار اليوم؟")
-max_len = 192
+text = st.text_area(
+    "اكتب نص باللهجة العربية:",
+    height=120,
+    placeholder="مثال: شو الأخبار اليوم؟"
+)
 
 if st.button("اتوقع اللهجة"):
     if not text.strip():
         st.warning("يرجى إدخال نص أولاً.")
     else:
-        label_char, dialect_full, confidence, probs = predict(text, max_len)
+        label_char, dialect_full, confidence, probs = predict(text)
 
-        st.success(f" اللهجة المتوقعة: **{dialect_full}**")
+        st.success(f"اللهجة المتوقعة: **{dialect_full}**")
         st.info(f"Confidence: **{confidence:.3f}**")
 
-        st.subheader(" احتمالات كل لهجة:")
+        st.subheader("احتمالات كل لهجة:")
         for i, p in enumerate(probs):
             char = id2label[i]
             name = DIALECT_NAME.get(char, char)
