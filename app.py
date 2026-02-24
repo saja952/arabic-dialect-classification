@@ -15,7 +15,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 DIALECT_NAME = {
     "E": "🇪🇬 مصري (Egyptian)",
     "G": "🇬🇨 خليجي (Gulf)",
-    "J": "🇯🇴 أردني / شامي (Jordanian/Levantine)",
+    "J": "🇯🇴 أردني / شامي (Jordanian)",
     "Y": "🇾🇪 يمني (Yemeni)"
 }
 
@@ -92,3 +92,4 @@ if st.button("اتوقع اللهجة"):
             name = DIALECT_NAME.get(char, char)
             st.write(f"{name}: {p:.3f}")
             st.progress(float(p))
+
